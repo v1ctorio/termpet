@@ -1,67 +1,34 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"os"
 
-	"github.com/BurntSushi/toml"
-	"github.com/pelletier/go-toml"
+	"github.com/urfave/cli/v3"
+	"github.com/v1ctorio/termpet/commands"
+	"github.com/v1ctorio/termpet/dbncfg"
 )
 
-type TermpetConfig struct {
-	DatabaseDir   string
-	commandParser string
-}
-
+// TODO: Add windows and linux support
 const DEFAULT_CONFIG_PATH = "~/.config/termpet/termpet.toml"
-const DEFAULT_PET_DIR = "~/.config/termpet/pet.db"
-const DEFAULT_COMMAND_PARSER = "cowsay -f koala \"{}\""
 
 func main() {
 
-}
-
-func readConfig(dir string) (cfg TermpetConfig, err error) {
-
-	if dir == "" {
-		dir = DEFAULT_CONFIG_PATH
+	if dbncfg.ConfigPath = os.Getenv("TERMPET_CONFIG_PATH"); dbncfg.ConfigPath == "" {
+		dbncfg.ConfigPath = DEFAULT_CONFIG_PATH
 	}
-	txt, err := os.ReadFile(dir)
+
+	cmd := &cli.Command{
+		Name:  "Termpet",
+		Usage: "Take care of your pet!",
+		Commands: []*cli.Command{
+			commands.InitCommand,
+		},
+	}
+
+	err := cmd.Run(context.Background(), os.Args)
 	if err != nil {
-		println("No config found. Initializing default config in ", dir)
-		cfg, err = initConfig(dir, DEFAULT_PET_DIR, DEFAULT_CONFIG_PATH)
-		if err != nil {
-			return cfg, err
-		}
-	} else {
-		cfg = toml.Unmarshal(txt, &cfg)
+		log.Fatal(err)
 	}
-
-	return
-
-}
-
-func initConfig(path string, dbDir string, commandParser string) (TermpetConfig, error) {
-
-	cfg := TermpetConfig{
-		commandParser: commandParser,
-		DatabaseDir:   dbDir,
-	}
-	tml, err := toml.Marshal(cfg)
-	if err != nil {
-		return TermpetConfig{}, fmt.Errorf("Error %encoding the config in toml %w", err)
-	}
-
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0644)
-	defer f.Close()
-	if err != nil {
-		return TermpetConfig{}, err
-	}
-
-	_, err = f.Write(tml)
-	if err != nil {
-		return TermpetConfig{}, err
-	}
-	f.Sync()
-	return cfg, nil
 }
