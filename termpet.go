@@ -19,15 +19,21 @@ func main() {
 		dbncfg.ConfigPath = DEFAULT_CONFIG_PATH
 	}
 
+	err := dbncfg.InitConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cmd := &cli.Command{
 		Name:  "Termpet",
 		Usage: "Take care of your pet!",
 		Commands: []*cli.Command{
 			commands.InitCommand,
+			commands.GreetCommand,
 		},
 	}
 
-	err := cmd.Run(context.Background(), os.Args)
+	err = cmd.Run(context.Background(), os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}

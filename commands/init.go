@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -31,6 +32,10 @@ var InitCommand = &cli.Command{
 
 func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 	petName := strings.TrimSpace(cmd.StringArg("Pet name"))
+
+	if petName == "" {
+		return fmt.Errorf("Specify a pet name")
+	}
 	var db *bolt.DB
 	db, err = dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
 	if err != nil {
@@ -45,5 +50,13 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 		}
 		return b.Put(B("name"), B(petName))
 	})
+
+	dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
+		CommandParser:  dbncfg.Config.CommandParser,
+		DatabaseDir:    dbncfg.Config.DatabaseDir,
+		DefaultPetName: petName,
+	})
+
+	fmt.Printf("Succesfully created pet %s in %s\n", petName, dbncfg.Config.DatabaseDir)
 	return nil
 }

@@ -3,17 +3,20 @@ package dbncfg
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/pelletier/go-toml"
 )
 
 type TermpetConfig struct {
-	DatabaseDir   string //Where the pet db file is stored
-	CommandParser string //Cmmand
+	DatabaseDir    string //Where the pet db file is stored
+	CommandParser  string //Cmmand
+	DefaultPetName string
 }
 
+const PERMS = 0644
 const DEFAULT_CONFIG_PATH = "~/.config/termpet/termpet.toml"
-const DEFAULT_PET_DIR = "~/.config/termpet/pet.db"
+const DEFAULT_PET_DB_PATH = "~/.config/termpet/pet.db"
 const DEFAULT_COMMAND_PARSER = "cowsay -f koala \"{}\""
 
 func readConfig(dir string) (cfg TermpetConfig, err error) {
@@ -27,7 +30,10 @@ func readConfig(dir string) (cfg TermpetConfig, err error) {
 	txt, err := os.ReadFile(dir)
 	if err != nil {
 		println("No config found. Initializing default config in ", dir)
-		cfg, err = initConfig(dir, DEFAULT_PET_DIR, DEFAULT_CONFIG_PATH)
+		cfg, err = WriteConfig(dir, TermpetConfig{
+			DatabaseDir:   DEFAULT_PET_DB_PATH,
+			CommandParser: DEFAULT_COMMAND_PARSER,
+		})
 		if err != nil {
 			return
 		}
@@ -42,22 +48,35 @@ func readConfig(dir string) (cfg TermpetConfig, err error) {
 
 }
 
-func initConfig(path string, dbDir string, commandParser string) (TermpetConfig, error) {
+func WriteConfig(path string, cfg TermpetConfig) (TermpetConfig, error) {
 
-	cfg := TermpetConfig{
-		CommandParser: commandParser,
-		DatabaseDir:   dbDir,
-	}
-	tml, err := toml.Marshal(cfg)
-	if err != nil {
-		return TermpetConfig{}, fmt.Errorf("Error %encoding the config in toml %w", err)
-	}
-
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0644)
-	defer f.Close()
+	path, err := filepath.Abs(filepath.Clean(path))
 	if err != nil {
 		return TermpetConfig{}, err
 	}
+
+	tml, err := toml.Marshal(cfg)
+	if err != nil {
+		return TermpetConfig{}, fmt.Errorf("Error encoding the config in toml %w", err)
+	}
+
+	d := filepath.Dir(path)
+	if _, err := os.Stat(d); os.IsNotExist(err) {
+		err := os.MkdirAll(d, PERMS)
+		if err != nil {
+			return TermpetConfig{}, err
+		}
+	} else {
+		if err != nil {
+			return TermpetConfig{}, err
+		}
+	}
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, PERMS)
+	if err != nil {
+		return TermpetConfig{}, err
+	}
+	defer f.Close()
 
 	_, err = f.Write(tml)
 	if err != nil {

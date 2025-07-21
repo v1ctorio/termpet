@@ -1,0 +1,4 @@
+CommandParser = "cowsay -f koala \"{}\""
+DatabaseDir = "~/.config/termpet/pet.db"
+DefaultPetName = ""
+rge"
