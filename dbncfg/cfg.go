@@ -14,9 +14,9 @@ type TermpetConfig struct {
 	DefaultPetName string
 }
 
-const PERMS = 0644
-const DEFAULT_CONFIG_PATH = "~/.config/termpet/termpet.toml"
-const DEFAULT_PET_DB_PATH = "~/.config/termpet/pet.db"
+const PERMS = 0666
+const DEFAULT_CONFIG_PATH = "&/termpet/termpet.toml"
+const DEFAULT_PET_DB_PATH = "&/termpet/pet.db"
 const DEFAULT_COMMAND_PARSER = "cowsay -f koala \"{}\""
 
 func readConfig(dir string) (cfg TermpetConfig, err error) {
@@ -50,19 +50,15 @@ func readConfig(dir string) (cfg TermpetConfig, err error) {
 
 func WriteConfig(path string, cfg TermpetConfig) (TermpetConfig, error) {
 
-	path, err := filepath.Abs(filepath.Clean(path))
-	if err != nil {
-		return TermpetConfig{}, err
-	}
-
 	tml, err := toml.Marshal(cfg)
 	if err != nil {
 		return TermpetConfig{}, fmt.Errorf("Error encoding the config in toml %w", err)
 	}
 
 	d := filepath.Dir(path)
+	println(path, d)
 	if _, err := os.Stat(d); os.IsNotExist(err) {
-		err := os.MkdirAll(d, PERMS)
+		err := os.MkdirAll(d, 0777)
 		if err != nil {
 			return TermpetConfig{}, err
 		}

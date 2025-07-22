@@ -21,7 +21,6 @@ func Say(text string, v ...any) error {
 	}
 	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 
-	println("Executing command:", cmd.String())
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
 	if err != nil {
