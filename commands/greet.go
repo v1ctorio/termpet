@@ -14,10 +14,11 @@ var GreetCommand = &cli.Command{
 }
 
 func greet(ctx context.Context, cmd *cli.Command) (err error) {
-	println("Greet command called")
-	err = pet.Say("Greetings dear user")
+	name, err := pet.GetName()
 	if err != nil {
-		return err
+		return
 	}
+	pet.Say("Greetings dear user, %s here", name)
+
 	return nil
 }

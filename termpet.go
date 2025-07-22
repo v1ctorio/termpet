@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 	"github.com/v1ctorio/termpet/commands"
 	"github.com/v1ctorio/termpet/dbncfg"
+	"github.com/v1ctorio/termpet/pet"
 )
 
 // TODO: Add windows and linux support
@@ -43,4 +44,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%v.\n", err)
 		os.Exit(1)
 	}
+
+	if pet.SayContent != "" {
+		pet.Sayln("%s", pet.SayContent)
+	}
+
 }

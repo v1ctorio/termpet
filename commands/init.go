@@ -44,6 +44,12 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 	defer db.Close()
 	println("Creating new pet", petName)
 	db.Update(func(tx *bolt.Tx) error {
+
+		bu := tx.Bucket(B(petName))
+		if bu != nil {
+			return fmt.Errorf("Pet %s already exists. Choose a different name to init the new pet", petName)
+		}
+
 		b, err := tx.CreateBucketIfNotExists(B(petName))
 		if err != nil {
 			return err

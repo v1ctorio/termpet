@@ -4,14 +4,24 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/v1ctorio/termpet/dbncfg"
 )
 
-var config dbncfg.TermpetConfig = dbncfg.Config
+const (
+	PetName                       string = "name"
+	PetLatestInteractionTimestamp        = "latestinteractiontimestamp"
+)
 
-func Say(text string, v ...any) error {
+var config *dbncfg.TermpetConfig = &dbncfg.Config
+
+var SayContent string = ""
+
+func Sayln(text string, v ...any) error {
 
 	formatted := fmt.Sprintf(text, v...)
 
@@ -27,4 +37,35 @@ func Say(text string, v ...any) error {
 		return fmt.Errorf("Error executing the parser command %w", err)
 	}
 	return nil
+}
+
+// Adds each say to a bucket of say things to print with sayln on exit
+func Say(text string, v ...any) {
+	SayContent = SayContent + "\n" + fmt.Sprintf(text, v...)
+}
+func updateLatestInteractionTime(db *bolt.DB) error {
+	return dbncfg.SetV(db, PetLatestInteractionTimestamp, getCurrentUnixTimestampString())
+}
+
+func GetName() (name string, err error) {
+	err = nil
+	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	err = updateLatestInteractionTime(db)
+	if err != nil {
+		return
+	}
+
+	name, err = dbncfg.GetV(db, PetName)
+
+	return
+
+}
+
+func getCurrentUnixTimestampString() string {
+	return strconv.FormatInt(time.Now().Unix(), 10)
 }
