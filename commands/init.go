@@ -34,7 +34,7 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 	petName := strings.TrimSpace(cmd.StringArg("Pet name"))
 
 	if petName == "" {
-		return fmt.Errorf("Specify a pet name")
+		return fmt.Errorf("Please, specify a pet name")
 	}
 	var db *bolt.DB
 	db, err = dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
