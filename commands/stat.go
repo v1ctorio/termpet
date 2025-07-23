@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -45,6 +46,9 @@ func stat(ctx context.Context, cmd *cli.Command) (err error) {
 	if !useJson {
 		pet.Say("My name is %s", name)
 		pet.Say("The latest time you interacted with me was %s, that was %s ", lit, formatUnixTime(I(lit), time.DateTime))
+	} else {
+		output := fmt.Sprintf("{ name:\"%s\", last_interacted: \"%s\"}", name, lit)
+		fmt.Println(output)
 	}
 
 	return
