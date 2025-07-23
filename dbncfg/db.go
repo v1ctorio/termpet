@@ -21,6 +21,7 @@ func OpenDB(path string) (*bolt.DB, error) {
 	}
 
 	path, err := SanitizePath(path)
+	path, err = SanitizePath(path)
 	if err != nil {
 		return nil, err
 	}

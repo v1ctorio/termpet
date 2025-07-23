@@ -25,8 +25,12 @@ func readConfig(dir string) (cfg TermpetConfig, err error) {
 	err = nil
 
 	if dir == "" {
-		dir = DEFAULT_CONFIG_PATH
+		dir, err = SanitizePath(DEFAULT_CONFIG_PATH)
+		if err != nil {
+			return
+		}
 	}
+	println("Reading config from ", dir)
 	txt, err := os.ReadFile(dir)
 	if err != nil {
 		println("No config found. Initializing default config in ", dir)
@@ -55,17 +59,9 @@ func WriteConfig(path string, cfg TermpetConfig) (TermpetConfig, error) {
 		return TermpetConfig{}, fmt.Errorf("Error encoding the config in toml %w", err)
 	}
 
-	d := filepath.Dir(path)
-	println(path, d)
-	if _, err := os.Stat(d); os.IsNotExist(err) {
-		err := os.MkdirAll(d, 0777)
-		if err != nil {
-			return TermpetConfig{}, err
-		}
-	} else {
-		if err != nil {
-			return TermpetConfig{}, err
-		}
+	err = CreateDirForFile(path)
+	if err != nil {
+		return TermpetConfig{}, err
 	}
 
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, PERMS)
@@ -80,4 +76,17 @@ func WriteConfig(path string, cfg TermpetConfig) (TermpetConfig, error) {
 	}
 	f.Sync()
 	return cfg, nil
+}
+
+func CreateDirForFile(fpath string) error {
+	dir := filepath.Dir(fpath)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0777)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	return nil
 }

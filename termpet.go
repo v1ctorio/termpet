@@ -13,17 +13,21 @@ import (
 )
 
 // TODO: Add windows and linux support
-const DEFAULT_CONFIG_PATH = "~/.config/termpet/termpet.toml"
-
-var sanitizePath = dbncfg.SanitizePath
 
 func main() {
 	var err error
 
 	if dbncfg.ConfigPath = os.Getenv("TERMPET_CONFIG_PATH"); dbncfg.ConfigPath == "" {
-		dbncfg.ConfigPath = DEFAULT_CONFIG_PATH
+
+		dbncfg.ConfigPath, err = dbncfg.SanitizePath(dbncfg.DEFAULT_CONFIG_PATH)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	dbncfg.ConfigPath, err = sanitizePath(dbncfg.ConfigPath)
+	dbncfg.ConfigPath, err = dbncfg.SanitizePath(dbncfg.ConfigPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	err = dbncfg.InitConfig()
 	if err != nil {
@@ -36,6 +40,7 @@ func main() {
 		Commands: []*cli.Command{
 			commands.InitCommand,
 			commands.GreetCommand,
+			commands.StatCommand,
 		},
 	}
 
@@ -46,7 +51,11 @@ func main() {
 	}
 
 	if pet.SayContent != "" {
-		pet.Sayln("%s", pet.SayContent)
+		err = pet.Sayln("%s", pet.SayContent)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v.\n", err)
+		}
+		os.Exit(0)
 	}
 
 }

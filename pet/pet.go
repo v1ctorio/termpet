@@ -12,9 +12,22 @@ import (
 	"github.com/v1ctorio/termpet/dbncfg"
 )
 
+type petValidKey string
+
 const (
-	PetName                       string = "name"
-	PetLatestInteractionTimestamp        = "latestinteractiontimestamp"
+	PetName                       petValidKey = "name"
+	PetLatestInteractionTimestamp petValidKey = "latestinteractiontime"
+)
+
+// I know this is hardcoded and kinda trashy but idk how to make it better without dependencies
+func (k petValidKey) String() string {
+	return string(k)
+}
+
+const (
+	SECOND = 60
+	DAY    = SECOND * 24
+	WEEK   = DAY * 7
 )
 
 var config *dbncfg.TermpetConfig = &dbncfg.Config
@@ -29,10 +42,16 @@ func Sayln(text string, v ...any) error {
 	if len(cmdParts) == 0 {
 		return fmt.Errorf("No command to execute")
 	}
-	cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
+
+	executable, err := exec.LookPath(cmdParts[0])
+	if err != nil || executable == "" {
+		return fmt.Errorf("No executable %s found. Check if it's in path", cmdParts[0])
+	}
+	cmd := exec.Command(executable, cmdParts[1:]...)
 
 	cmd.Stdout = os.Stdout
-	err := cmd.Run()
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Error executing the parser command %w", err)
 	}
@@ -44,7 +63,7 @@ func Say(text string, v ...any) {
 	SayContent = SayContent + "\n" + fmt.Sprintf(text, v...)
 }
 func updateLatestInteractionTime(db *bolt.DB) error {
-	return dbncfg.SetV(db, PetLatestInteractionTimestamp, getCurrentUnixTimestampString())
+	return dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), getCurrentUnixTimestampString())
 }
 
 func GetName() (name string, err error) {
@@ -60,10 +79,37 @@ func GetName() (name string, err error) {
 		return
 	}
 
-	name, err = dbncfg.GetV(db, PetName)
+	name, err = dbncfg.GetV(db, PetName.String())
 
 	return
+}
 
+func getKey(key petValidKey, doUpdateLatestInteractionTime bool) (value string, err error) {
+	err = nil
+	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	value, err = dbncfg.GetV(db, key.String())
+
+	if doUpdateLatestInteractionTime {
+		err = updateLatestInteractionTime(db)
+	}
+
+	if err != nil {
+		return "", err
+	}
+	return
+}
+
+func GetK(key petValidKey) (string, error) {
+	return getKey(key, true)
+}
+
+func GetKNoUpdate(key petValidKey) (string, error) {
+	return getKey(key, false)
 }
 
 func getCurrentUnixTimestampString() string {
