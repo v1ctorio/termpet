@@ -49,10 +49,13 @@ func stat(ctx context.Context, cmd *cli.Command) (err error) {
 
 	if !useJson {
 		pet.Say("My name is %s", p.Name)
-		pet.Say("The latest time you interacted with me was %s, that was %s ", p.LatestInteractionTimestamp, formatUnixTime(I(p.LatestInteractionTimestamp), time.DateTime))
+		pet.Say("Your latest interaction with me was in the %s (%s) ", formatUnixTime(I(p.LatestInteractionTimestamp), time.DateTime), p.LatestInteractionTimestamp)
 		pet.Say("And my hunger is at %d/48", p.Hunger)
+		if p.Sickness != "none" {
+			pet.Say("And I'm sick! (%s)", p.Sickness)
+		}
 	} else {
-		output := fmt.Sprintf("{ name:\"%s\", last_interacted: \"%s\", hunger: \"%d\"}", p.Name, p.LatestInteractionTimestamp, p.Hunger)
+		output := fmt.Sprintf("{ name:\"%s\", last_interacted: \"%s\", hunger: \"%d\", sickness: \"%s\"}", p.Name, p.LatestInteractionTimestamp, p.Hunger, p.Sickness)
 		fmt.Println(output)
 	}
 

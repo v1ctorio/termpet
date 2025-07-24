@@ -119,7 +119,17 @@ func Sayln(text string, v ...any) error {
 
 // Adds each say to a bucket of say things to print with sayln on exit
 func Say(text string, v ...any) {
-	SayContent = SayContent + "\n" + fmt.Sprintf(text, v...)
+
+	if strings.Contains(text, "%t") {
+		v = []any{}
+		text = strings.ReplaceAll(text, "%t", "")
+	}
+
+	if SayContent == "" {
+		SayContent = fmt.Sprintf(fmt.Sprintf(text, v...))
+	} else {
+		SayContent = SayContent + "\n" + fmt.Sprintf(text, v...)
+	}
 }
 func UpdateLatestInteractionTime() error {
 	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
