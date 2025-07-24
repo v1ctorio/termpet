@@ -24,7 +24,7 @@
         rec {
           termpet = pkgs.buildGoModule {
             pname = "termpet";
-            version = "0.0.1";
+            version = "0.0.2";
             src = ./.;
             vendorHash = "sha256-Xk4+/cG/XyL/wwo1BuYJCm4eKL1HI7hBvbM1lh+Frik= ";
 
