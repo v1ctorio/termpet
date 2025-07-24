@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 	"slices"
 	"strings"
 
@@ -14,8 +15,6 @@ import (
 	"github.com/v1ctorio/termpet/dbncfg"
 	"github.com/v1ctorio/termpet/pet"
 )
-
-// TODO: Add windows and linux support
 
 func main() {
 	var err error
@@ -44,20 +43,36 @@ func main() {
 			commands.InitCommand,
 			commands.GreetCommand,
 			commands.StatCommand,
+			commands.FeedCommand,
+		},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "debug",
+				Usage: "Print stack traces",
+				Value: false,
+			},
 		},
 		Action: noCommand,
 	}
 
 	err = cmd.Run(context.Background(), os.Args)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v.\n", err)
+		doDebug := cmd.Bool("debug")
+		if doDebug {
+			fmt.Fprintf(os.Stderr, "%+v.\n", err)
+			debug.PrintStack()
+
+		} else {
+			fmt.Fprintf(os.Stderr, "%+v.\n", err)
+		}
+
 		os.Exit(1)
 	}
 
 	if pet.SayContent != "" {
 		err = pet.Sayln("%s", pet.SayContent)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v.\n", err)
+			fmt.Fprintf(os.Stderr, "%+v.\n", err)
 		}
 		os.Exit(0)
 	}
@@ -85,7 +100,7 @@ func noCommand(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		if input == "p" {
-			pet.YellowLn("You petted %s\n", name)
+			pet.YellowLn("You pet %s\n", name)
 		}
 
 		if !slices.Contains(verbs, string(input)) {

@@ -61,6 +61,12 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 		return b.Put(B("name"), B(petName))
 	})
 	db.Close()
+	dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
+		CommandParser:  dbncfg.Config.CommandParser,
+		DatabaseDir:    dbncfg.Config.DatabaseDir,
+		DefaultPetName: petName,
+	})
+
 	err = pet.SetK(pet.PetHunger, 0)
 	if err != nil {
 		return err
@@ -77,12 +83,6 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 	if dbncfg.Config.DefaultPetName != "" {
 		fmt.Printf("Default pet is already set to %s, it will be replaced by %s.\n", dbncfg.Config.DefaultPetName, petName)
 	}
-
-	dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
-		CommandParser:  dbncfg.Config.CommandParser,
-		DatabaseDir:    dbncfg.Config.DatabaseDir,
-		DefaultPetName: petName,
-	})
 
 	fmt.Printf("Succesfully created pet %s in %s\n", petName, dbncfg.Config.DatabaseDir)
 	return nil

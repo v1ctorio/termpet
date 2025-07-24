@@ -32,44 +32,57 @@ type PetData struct {
 	Sickness                   string
 }
 
-func (p PetData) save() error {
-	err := SetK(PetName, p.Name)
-	err = SetK(PetHunger, p.Hunger)
-	err = SetK(PetLatestInteractionTimestamp, p.LatestInteractionTimestamp)
-	err = SetK(PetSickness, p.Sickness)
+func (p PetData) Save() error {
+
+	db, err := dbncfg.OpenDB(config.DatabaseDir)
+	if err != nil {
+		return err
+	}
+	err = dbncfg.SetV(db, PetName.String(), p.Name)
+	err = dbncfg.SetV(db, PetHunger.String(), p.Hunger)
+	err = dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), p.LatestInteractionTimestamp)
+	err = dbncfg.SetV(db, PetSickness.String(), p.Sickness)
+	db.Close()
 	return err
 }
 func (p *PetData) UpdateLatestInteractionTime() {
 	p.LatestInteractionTimestamp = strconv.FormatInt(time.Now().Unix(), 10)
 }
-func GetPet() (PetData, error) {
+func GetPet() (pd PetData, err error) {
+	pd = PetData{}
 	pn, err := GetKNoUpdate(PetName)
 	if err != nil {
-		return PetData{}, err
+		return
 	}
 	hunger, err := GetKNoUpdate(PetHunger)
 	if err != nil {
-		return PetData{}, err
+		return
 	}
 	h, err := strconv.Atoi(hunger)
 	if err != nil {
-		return PetData{}, err
+		return
 	}
 	lit, err := GetKNoUpdate(PetLatestInteractionTimestamp)
 	if err != nil {
-		return PetData{}, err
+		return
+	}
+	s, err := GetKNoUpdate(PetSickness)
+	if err != nil {
+		return
 	}
 	return PetData{
 		Name:                       pn,
 		LatestInteractionTimestamp: lit,
 		Hunger:                     h,
+		Sickness:                   s,
 	}, nil
 
 }
 
 const (
-	SECOND = 60
-	HOUR   = 60
+	SECOND = 1
+	MINUTE = 60 * SECOND
+	HOUR   = MINUTE * 60
 	DAY    = HOUR * 24
 	WEEK   = DAY * 7
 )
@@ -138,23 +151,17 @@ func GetName() (name string, err error) {
 }
 
 func YellowLn(text string, v ...any) {
-	fmt.Print("\033[93;1;3m" + fmt.Sprintf(text, v...) + "\033[0m")
+	fmt.Print("\033[93;1;3m" + fmt.Sprintf(text, v...) + "\033[0m\n")
 }
 
 func SetK[T string | int](key petValidKey, val T) error {
-	var value string = ""
-	if n, ok := any(val).(int); ok {
-		value = strconv.Itoa(n)
-	}
-	if s, ok := any(val).(string); ok {
-		value = s
-	}
+
 	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
 	if err != nil {
 		return err
 	}
 
-	err = dbncfg.SetV(db, key.String(), value)
+	err = dbncfg.SetV(db, key.String(), val)
 	db.Close()
 
 	return err
@@ -198,7 +205,7 @@ func UpdateHunger() error {
 		return err
 	}
 	hungerToAdd, err := calculateHunger(pet.LatestInteractionTimestamp)
-	println("Adding %d hunger to the pet", hungerToAdd)
+	fmt.Printf("Adding %d hunger to the pet\n", hungerToAdd)
 	if err != nil {
 		return err
 	}
@@ -208,12 +215,12 @@ func UpdateHunger() error {
 		YellowLn("%s is starving! try to feed them.", pet.Name)
 	}
 
-	if pet.Hunger > 24 {
-		YellowLn("%s is so hungry that they go sick!", pet.Name)
+	if pet.Hunger > 24 && pet.Sickness != "hungry" {
+		YellowLn("%s is so hungry that they got sick!", pet.Name)
 		pet.Sickness = "hungry"
 	}
 
-	err = pet.save()
+	err = pet.Save()
 	return err
 }
 
@@ -224,6 +231,7 @@ func calculateHunger(latestInteractionTimestamp string) (int, error) {
 		return 0, err
 	}
 	difference := currentTimeStamp - LIT
+	//println(difference)
 
 	if difference < HOUR/2 {
 		return 0, nil

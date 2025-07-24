@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,9 +82,16 @@ func GetV(db *bolt.DB, key string) (string, error) {
 	return value, nil
 }
 
-func SetV(db *bolt.DB, key string, value string) error {
+func SetV[T string | int](db *bolt.DB, key string, val T) error {
 	time.Sleep(1000)
-
+	var value string = ""
+	if n, ok := any(val).(int); ok {
+		value = strconv.Itoa(n)
+	}
+	if s, ok := any(val).(string); ok {
+		value = s
+	}
+	//	fmt.Printf("Saving %s as %s", key, value)
 	if key == "" {
 		return fmt.Errorf("No key provided for errorf")
 	}
