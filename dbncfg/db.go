@@ -11,7 +11,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-var noBucketFound = "No bucket %s found. Please init your pet with the `init pet` subcommand"
+var noBucketFound = "No bucket %s found. \033[31;1;3mPlease init your pet with the `init pet` subcommand\033[0m"
 
 func B(s string) []byte {
 	return []byte(s)

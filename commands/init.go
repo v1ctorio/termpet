@@ -20,7 +20,8 @@ func B(s string) []byte {
 }
 
 var InitCommand = &cli.Command{
-	Name: "init",
+	Name:      "init",
+	UsageText: "Run `termpet init -h` to see the init commands",
 	Commands: []*cli.Command{
 		{
 			Name:  "pet",
@@ -67,8 +68,9 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 	petName := strings.TrimSpace(cmd.StringArg("Pet name"))
 
 	if petName == "" {
-		return fmt.Errorf("Please, specify a pet name")
+		return fmt.Errorf("please, specify a pet name")
 	}
+	dbncfg.PetName = petName
 	var db *bolt.DB
 	dbncfg.Config.DatabaseDir, err = dbncfg.SanitizePath(dbncfg.Config.DatabaseDir)
 	if err != nil {
@@ -83,7 +85,7 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 
 		bu := tx.Bucket(B(petName))
 		if bu != nil {
-			return fmt.Errorf("Pet %s already exists. Choose a different name to init the new pet", petName)
+			return fmt.Errorf("pet %s already exists. Choose a different name to init the new pet", petName)
 		}
 
 		b, err := tx.CreateBucketIfNotExists(B(petName))
@@ -93,11 +95,15 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 		return b.Put(B("name"), B(petName))
 	})
 	db.Close()
-	dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
+	dbncfg.Config, err = dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
 		CommandParser:  dbncfg.Config.CommandParser,
 		DatabaseDir:    dbncfg.Config.DatabaseDir,
 		DefaultPetName: petName,
 	})
+	if err != nil {
+		return err
+	}
+	dbncfg.Config.DefaultPetName = petName
 
 	err = pet.SetK(pet.PetHunger, 0)
 	if err != nil {

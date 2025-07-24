@@ -209,6 +209,7 @@ func SetK[T string | int](key petValidKey, val T) error {
 	}
 
 	err = dbncfg.SetV(db, key.String(), val)
+
 	db.Close()
 
 	return err
