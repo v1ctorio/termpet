@@ -18,6 +18,10 @@ func greet(ctx context.Context, cmd *cli.Command) (err error) {
 	if err != nil {
 		return
 	}
+	err = pet.UpdateHunger()
+	if err != nil {
+		return err
+	}
 	pet.Say("Greetings dear user, %s here", name)
 
 	return nil

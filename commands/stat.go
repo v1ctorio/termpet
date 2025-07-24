@@ -41,6 +41,12 @@ func stat(ctx context.Context, cmd *cli.Command) (err error) {
 	if err != nil {
 		return err
 	}
+
+	err = pet.UpdateHunger()
+	if err != nil {
+		return err
+	}
+
 	if !useJson {
 		pet.Say("My name is %s", p.Name)
 		pet.Say("The latest time you interacted with me was %s, that was %s ", p.LatestInteractionTimestamp, formatUnixTime(I(p.LatestInteractionTimestamp), time.DateTime))

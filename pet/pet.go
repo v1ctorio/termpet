@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/v1ctorio/termpet/dbncfg"
 )
 
@@ -18,6 +17,7 @@ const (
 	PetName                       petValidKey = "name"
 	PetLatestInteractionTimestamp petValidKey = "latestinteractiontime"
 	PetHunger                     petValidKey = "hunger"
+	PetSickness                   petValidKey = "sickness"
 )
 
 // I know this is hardcoded and kinda trashy but idk how to make it better without dependencies
@@ -29,13 +29,18 @@ type PetData struct {
 	Name                       string
 	LatestInteractionTimestamp string
 	Hunger                     int
+	Sickness                   string
 }
 
 func (p PetData) save() error {
 	err := SetK(PetName, p.Name)
 	err = SetK(PetHunger, p.Hunger)
 	err = SetK(PetLatestInteractionTimestamp, p.LatestInteractionTimestamp)
+	err = SetK(PetSickness, p.Sickness)
 	return err
+}
+func (p *PetData) UpdateLatestInteractionTime() {
+	p.LatestInteractionTimestamp = strconv.FormatInt(time.Now().Unix(), 10)
 }
 func GetPet() (PetData, error) {
 	pn, err := GetKNoUpdate(PetName)
@@ -103,8 +108,15 @@ func Sayln(text string, v ...any) error {
 func Say(text string, v ...any) {
 	SayContent = SayContent + "\n" + fmt.Sprintf(text, v...)
 }
-func updateLatestInteractionTime(db *bolt.DB) error {
-	return dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), GetCurrentUnixTimestampString())
+func UpdateLatestInteractionTime() error {
+	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
+	if err != nil {
+		return err
+	}
+	err = dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), GetCurrentUnixTimestampString())
+	db.Close()
+	return err
+
 }
 
 func GetName() (name string, err error) {
@@ -113,14 +125,14 @@ func GetName() (name string, err error) {
 	if err != nil {
 		return
 	}
-	defer db.Close()
+	name, err = dbncfg.GetV(db, PetName.String())
 
-	err = updateLatestInteractionTime(db)
+	db.Close()
+
+	err = UpdateLatestInteractionTime()
 	if err != nil {
 		return
 	}
-
-	name, err = dbncfg.GetV(db, PetName.String())
 
 	return
 }
@@ -141,9 +153,9 @@ func SetK[T string | int](key petValidKey, val T) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	err = dbncfg.SetV(db, key.String(), value)
+	db.Close()
 
 	return err
 
@@ -155,12 +167,11 @@ func getKey(key petValidKey, doUpdateLatestInteractionTime bool) (value string, 
 	if err != nil {
 		return
 	}
-	defer db.Close()
 
 	value, err = dbncfg.GetV(db, key.String())
-
+	db.Close()
 	if doUpdateLatestInteractionTime {
-		err = updateLatestInteractionTime(db)
+		err = UpdateLatestInteractionTime()
 	}
 
 	if err != nil {
@@ -181,16 +192,26 @@ func GetCurrentUnixTimestampString() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
-func updateHunger() error {
+func UpdateHunger() error {
 	pet, err := GetPet()
 	if err != nil {
 		return err
 	}
 	hungerToAdd, err := calculateHunger(pet.LatestInteractionTimestamp)
+	println("Adding %d hunger to the pet", hungerToAdd)
 	if err != nil {
 		return err
 	}
 	pet.Hunger = pet.Hunger + hungerToAdd
+
+	if pet.Hunger > 18 {
+		YellowLn("%s is starving! try to feed them.", pet.Name)
+	}
+
+	if pet.Hunger > 24 {
+		YellowLn("%s is so hungry that they go sick!", pet.Name)
+		pet.Sickness = "hungry"
+	}
 
 	err = pet.save()
 	return err
