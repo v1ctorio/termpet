@@ -45,6 +45,7 @@ func main() {
 			commands.GreetCommand,
 			commands.StatCommand,
 			commands.FeedCommand,
+			commands.CoinflipCommand,
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
