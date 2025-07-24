@@ -63,7 +63,10 @@ func WriteConfig(path string, cfg TermpetConfig) (TermpetConfig, error) {
 	if err != nil {
 		return TermpetConfig{}, err
 	}
-
+	err = os.Remove(path)
+	if err != nil {
+		return TermpetConfig{}, err
+	}
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, PERMS)
 	if err != nil {
 		return TermpetConfig{}, err

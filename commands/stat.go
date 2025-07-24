@@ -37,17 +37,16 @@ func stat(ctx context.Context, cmd *cli.Command) (err error) {
 	err = nil
 
 	useJson := cmd.Bool("json")
-	name, err := pet.GetName()
+	p, err := pet.GetPet()
 	if err != nil {
 		return err
 	}
-	lit, err := pet.GetKNoUpdate(pet.PetLatestInteractionTimestamp)
-
 	if !useJson {
-		pet.Say("My name is %s", name)
-		pet.Say("The latest time you interacted with me was %s, that was %s ", lit, formatUnixTime(I(lit), time.DateTime))
+		pet.Say("My name is %s", p.Name)
+		pet.Say("The latest time you interacted with me was %s, that was %s ", p.LatestInteractionTimestamp, formatUnixTime(I(p.LatestInteractionTimestamp), time.DateTime))
+		pet.Say("And my hunger is at %d/48", p.Hunger)
 	} else {
-		output := fmt.Sprintf("{ name:\"%s\", last_interacted: \"%s\"}", name, lit)
+		output := fmt.Sprintf("{ name:\"%s\", last_interacted: \"%s\", hunger: \"%d\"}", p.Name, p.LatestInteractionTimestamp, p.Hunger)
 		fmt.Println(output)
 	}
 

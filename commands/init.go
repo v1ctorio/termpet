@@ -38,11 +38,14 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 		return fmt.Errorf("Please, specify a pet name")
 	}
 	var db *bolt.DB
+	dbncfg.Config.DatabaseDir, err = dbncfg.SanitizePath(dbncfg.Config.DatabaseDir)
+	if err != nil {
+		return err
+	}
 	db, err = dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 	println("Creating new pet", petName)
 	db.Update(func(tx *bolt.Tx) error {
 
@@ -57,8 +60,15 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 		}
 		return b.Put(B("name"), B(petName))
 	})
-	pet.SetK(pet.PetHunger, 0)
-
+	db.Close()
+	err = pet.SetK(pet.PetHunger, 0)
+	if err != nil {
+		return err
+	}
+	err = pet.SetK(pet.PetLatestInteractionTimestamp, pet.GetCurrentUnixTimestampString())
+	if err != nil {
+		return err
+	}
 	dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
 		CommandParser:  dbncfg.Config.CommandParser,
 		DatabaseDir:    dbncfg.Config.DatabaseDir,

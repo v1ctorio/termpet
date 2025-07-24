@@ -80,7 +80,7 @@ func GetV(db *bolt.DB, key string) (string, error) {
 	return value, nil
 }
 
-func SetV[bval string | int](db *bolt.DB, key string, value bval) error {
+func SetV(db *bolt.DB, key string, value string) error {
 	if key == "" {
 		return fmt.Errorf("No key provided for errorf")
 	}
@@ -90,16 +90,8 @@ func SetV[bval string | int](db *bolt.DB, key string, value bval) error {
 		if bucket == nil {
 			return fmt.Errorf(noBucketFound, PetName)
 		}
-
-		if s, ok := any(value).(string); ok {
-			return bucket.Put(B(key), B(s))
-		}
-
-		if n, ok := any(value).(int); ok {
-			return bucket.Put(B(key), B(fmt.Sprintf("%d", n)))
-		}
-
-		return fmt.Errorf("Invalid type provided")
+		return bucket.Put(B(key), B(value))
 	})
+	db.Close()
 	return err
 }

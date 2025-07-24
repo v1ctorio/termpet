@@ -25,11 +25,42 @@ func (k petValidKey) String() string {
 	return string(k)
 }
 
+type PetData struct {
+	Name                       string
+	LatestInteractionTimestamp string
+	Hunger                     int
+}
+
+func (p PetData) save() error {
+	err := SetK(PetName, p.Name)
+	err = SetK(PetHunger, p.Hunger)
+	err = SetK(PetLatestInteractionTimestamp, p.LatestInteractionTimestamp)
+	return err
+}
+func GetPet() (PetData, error) {
+	pn, err := GetKNoUpdate(PetName)
+	hunger, err := GetKNoUpdate(PetHunger)
+	h, err := strconv.Atoi(hunger)
+	lit, err := GetKNoUpdate(PetLatestInteractionTimestamp)
+	if err != nil {
+		return PetData{}, err
+	}
+	return PetData{
+		Name:                       pn,
+		LatestInteractionTimestamp: lit,
+		Hunger:                     h,
+	}, nil
+
+}
+
 const (
 	SECOND = 60
-	DAY    = SECOND * 24
+	HOUR   = 60
+	DAY    = HOUR * 24
 	WEEK   = DAY * 7
 )
+
+const STARVATION = 24 * 2
 
 var config *dbncfg.TermpetConfig = &dbncfg.Config
 
@@ -64,7 +95,7 @@ func Say(text string, v ...any) {
 	SayContent = SayContent + "\n" + fmt.Sprintf(text, v...)
 }
 func updateLatestInteractionTime(db *bolt.DB) error {
-	return dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), getCurrentUnixTimestampString())
+	return dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), GetCurrentUnixTimestampString())
 }
 
 func GetName() (name string, err error) {
@@ -90,13 +121,20 @@ func YellowLn(text string, v ...any) {
 }
 
 func SetK[T string | int](key petValidKey, val T) error {
+	var value string = ""
+	if n, ok := any(val).(int); ok {
+		value = strconv.Itoa(n)
+	}
+	if s, ok := any(val).(string); ok {
+		value = s
+	}
 	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	err = dbncfg.SetV(db, key.String(), val)
+	err = dbncfg.SetV(db, key.String(), value)
 
 	return err
 
@@ -130,6 +168,48 @@ func GetKNoUpdate(key petValidKey) (string, error) {
 	return getKey(key, false)
 }
 
-func getCurrentUnixTimestampString() string {
+func GetCurrentUnixTimestampString() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
+}
+
+func updateHunger() error {
+	pet, err := GetPet()
+	if err != nil {
+		return err
+	}
+	hungerToAdd, err := calculateHunger(pet.LatestInteractionTimestamp)
+	if err != nil {
+		return err
+	}
+	pet.Hunger = pet.Hunger + hungerToAdd
+
+	err = pet.save()
+	return err
+}
+
+func calculateHunger(latestInteractionTimestamp string) (int, error) {
+	currentTimeStamp := time.Now().Unix()
+	LIT, err := strconv.ParseInt(latestInteractionTimestamp, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	difference := currentTimeStamp - LIT
+
+	if difference < HOUR/2 {
+		return 0, nil
+	}
+	if difference < 3*HOUR {
+		return 1, nil
+	}
+	if difference < 3*HOUR {
+		return 1, nil
+	}
+	if difference < 15*HOUR {
+		return 15, nil
+	}
+	if difference < 24*HOUR {
+		return 24, nil
+	}
+	return 35, nil
+
 }
