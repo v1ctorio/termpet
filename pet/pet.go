@@ -96,17 +96,9 @@ func SetK[T string | int](key petValidKey, val T) error {
 	}
 	defer db.Close()
 
-	if s, ok := any(val).(string); ok {
-		err := dbncfg.SetV(db, key.String(), []byte(val))
-		if err != nil {
-			return err
-		}
-	}
-	if n, ok := any(val).(int); ok {
-		err := dbncfg.SetV(db, key.String(), n)
+	err = dbncfg.SetV(db, key.String(), val)
 
-	}
-	return fmt.Errorf("Invalid type provided")
+	return err
 
 }
 
