@@ -38,8 +38,9 @@ func main() {
 	}
 
 	cmd := &cli.Command{
-		Name:  "Termpet",
-		Usage: "Take care of your pet!",
+		Name:    "Termpet",
+		Usage:   "Take care of your pet!",
+		Version: "0.0.1",
 		Commands: []*cli.Command{
 			commands.InitCommand,
 			commands.GreetCommand,

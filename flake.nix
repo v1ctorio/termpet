@@ -26,11 +26,11 @@
             pname = "termpet";
             version = "0.0.1";
             src = ./.;
-            vendorHash = nixpkgs.lib.fakeHash;
+            vendorHash = "sha256-Xk4+/cG/XyL/wwo1BuYJCm4eKL1HI7hBvbM1lh+Frik= ";
 
             buildInputs = [
-              go 
-              neo-cowsay
+              pkgs.go 
+              pkgs.neo-cowsay
             ];
 
           };

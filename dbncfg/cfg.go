@@ -30,7 +30,7 @@ func readConfig(dir string) (cfg TermpetConfig, err error) {
 			return
 		}
 	}
-	println("Reading config from ", dir)
+	//println("Reading config from ", dir)
 	txt, err := os.ReadFile(dir)
 	if err != nil {
 		println("No config found. Initializing default config in ", dir)

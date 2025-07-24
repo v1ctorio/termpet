@@ -16,7 +16,7 @@ import (
 
 var RpsCommand = &cli.Command{
 	Name:   "rps",
-	Usage:  "Rock, papaer, scissors",
+	Usage:  "Rock, paper, scissors",
 	Action: rps,
 }
 

@@ -252,7 +252,7 @@ func UpdateHunger() error {
 		return err
 	}
 	hungerToAdd, err := calculateHunger(pet.LatestInteractionTimestamp)
-	fmt.Printf("Adding %d hunger to the pet\n", hungerToAdd)
+	//	fmt.Printf("Adding %d hunger to the pet\n", hungerToAdd)
 	if err != nil {
 		return err
 	}
