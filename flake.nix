@@ -26,7 +26,9 @@
             pname = "termpet";
             version = "0.0.2";
             src = ./.;
-            vendorHash = "sha256-Xk4+/cG/XyL/wwo1BuYJCm4eKL1HI7hBvbM1lh+Frik= ";
+            rev = "v0.0.2-a";
+            
+            vendorHash = "0rwhqavn771gkw94sjhwf6jfcapngbvqfyhrban9xz43v6hvqap4";
 
             buildInputs = [
               pkgs.go 
