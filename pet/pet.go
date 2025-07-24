@@ -17,6 +17,7 @@ type petValidKey string
 const (
 	PetName                       petValidKey = "name"
 	PetLatestInteractionTimestamp petValidKey = "latestinteractiontime"
+	PetHunger                     petValidKey = "hunger"
 )
 
 // I know this is hardcoded and kinda trashy but idk how to make it better without dependencies
@@ -82,6 +83,31 @@ func GetName() (name string, err error) {
 	name, err = dbncfg.GetV(db, PetName.String())
 
 	return
+}
+
+func YellowLn(text string, v ...any) {
+	fmt.Print("\033[93;1;3m" + fmt.Sprintf(text, v...) + "\033[0m")
+}
+
+func SetK[T string | int](key petValidKey, val T) error {
+	db, err := dbncfg.OpenDB(dbncfg.Config.DatabaseDir)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	if s, ok := any(val).(string); ok {
+		err := dbncfg.SetV(db, key.String(), []byte(val))
+		if err != nil {
+			return err
+		}
+	}
+	if n, ok := any(val).(int); ok {
+		err := dbncfg.SetV(db, key.String(), n)
+
+	}
+	return fmt.Errorf("Invalid type provided")
+
 }
 
 func getKey(key petValidKey, doUpdateLatestInteractionTime bool) (value string, err error) {

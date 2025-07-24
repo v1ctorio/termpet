@@ -8,6 +8,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/urfave/cli/v3"
 	"github.com/v1ctorio/termpet/dbncfg"
+	"github.com/v1ctorio/termpet/pet"
 )
 
 func B(s string) []byte {
@@ -56,6 +57,7 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 		}
 		return b.Put(B("name"), B(petName))
 	})
+	pet.SetK(pet.PetHunger, 0)
 
 	dbncfg.WriteConfig(dbncfg.ConfigPath, dbncfg.TermpetConfig{
 		CommandParser:  dbncfg.Config.CommandParser,

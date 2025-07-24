@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
+	"slices"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 	"github.com/v1ctorio/termpet/commands"
@@ -42,6 +45,7 @@ func main() {
 			commands.GreetCommand,
 			commands.StatCommand,
 		},
+		Action: noCommand,
 	}
 
 	err = cmd.Run(context.Background(), os.Args)
@@ -58,4 +62,36 @@ func main() {
 		os.Exit(0)
 	}
 
+}
+
+func noCommand(ctx context.Context, cmd *cli.Command) error {
+	var keepListening bool = true
+	verbs := []string{"p"}
+
+	reader := bufio.NewReader(os.Stdin)
+	name, err := pet.GetName()
+	if err != nil {
+		return err
+	}
+	pet.Sayln("Click p to pet me!")
+
+	for keepListening {
+
+		input, err := reader.ReadString('\n')
+
+		input = strings.TrimSpace(strings.ReplaceAll(input, "\n", ""))
+		if err != nil {
+			return err
+		}
+
+		if input == "p" {
+			pet.YellowLn("You petted %s\n", name)
+		}
+
+		if !slices.Contains(verbs, string(input)) {
+			keepListening = false
+		}
+		_ = input
+	}
+	return nil
 }
