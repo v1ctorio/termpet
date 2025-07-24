@@ -34,7 +34,7 @@ Also, don't forget to take care of your terminal pet and feed them or they might
 
 # Installation
 ## Termpet
-You can install termpet downloading its release binaries from [the releases](https://github.com/v1ctorio/termpet/releases/latest), install it with the nix flake (`nix profile install github:v1ctorio/termpet`) or using go `go instal github.com/v1ctorio/termpet`
+You can install termpet downloading its release binaries from [the releases](https://github.com/v1ctorio/termpet/releases/latest), install it with the nix flake (`nix profile install github:v1ctorio/termpet`) or using go `go install github.com/v1ctorio/termpet@latest`
 #### Cowsay
 To use TermPet with it's default configuration, you need to have `cowsay` installed on your system. I recommend using [Neo-cowsay](https://github.com/Code-Hex/Neo-cowsay).
 
