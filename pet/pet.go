@@ -94,7 +94,10 @@ var config *dbncfg.TermpetConfig = &dbncfg.Config
 var SayContent string = ""
 
 func Sayln(text string, v ...any) error {
-
+	if strings.Contains(text, "%t") {
+		v = []any{}
+		text = strings.ReplaceAll(text, "%t", "")
+	}
 	formatted := fmt.Sprintf(text, v...)
 
 	cmdParts := strings.Fields(strings.Replace(config.CommandParser, "{}", formatted, 1))

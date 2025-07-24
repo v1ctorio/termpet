@@ -3,6 +3,9 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -27,6 +30,23 @@ var InitCommand = &cli.Command{
 				},
 			},
 			Action: initPet,
+		},
+		{
+			Name:  "startup",
+			Usage: "Add the pet to your terminal start script",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:  "write",
+					Usage: "Write the changes to disk instead of just printing them",
+					Value: false,
+				},
+				&cli.StringFlag{
+					Name:  "shell",
+					Usage: "Specify the desired term for the configuration",
+					Value: "bash",
+				},
+			},
+			Action: initStartup,
 		},
 	},
 }
@@ -85,5 +105,80 @@ func initPet(ctx context.Context, cmd *cli.Command) (err error) {
 	}
 
 	fmt.Printf("Succesfully created pet %s in %s\n", petName, dbncfg.Config.DatabaseDir)
+	return nil
+}
+
+func initStartup(ctx context.Context, cmd *cli.Command) (err error) {
+	var write = cmd.Bool("write")
+
+	if write {
+
+		if e, err := exec.LookPath("termpet"); e == "" || err != nil {
+			return fmt.Errorf("termpet not found in path, add it first to make startup work %w", err)
+		}
+	}
+
+	var shell string
+	shell = cmd.String("shell")
+
+	if runtime.GOOS == "windows" {
+		shell = "powershell"
+	} else if strings.Contains(os.Getenv("SHELL"), "fish") {
+		shell = "fish"
+	} else if strings.Contains(os.Getenv("SHELL"), "zsh") {
+		shell = "zsh"
+	}
+
+	if shell == "bash" {
+		println("Shell assumed to be bash. If using zsh or fish, specify so with the flag `--shell`")
+	}
+
+	stringToAdd := `termpet greet`
+
+	_ = stringToAdd
+
+	var fileToEdit string
+	switch shell {
+	case "powershell":
+		out, err := exec.Command("powershell", "-NoProfile", "-Command", "Write-Output $PROFILE").CombinedOutput()
+		if err != nil {
+			return err
+		}
+		fileToEdit = strings.TrimSpace(string(out))
+	case "bash":
+		fileToEdit, err = dbncfg.SanitizePath("~/.bashrc")
+		if err != nil {
+			return err
+		}
+	case "zsh":
+		fileToEdit, err = dbncfg.SanitizePath("~/.bashrc")
+		if err != nil {
+			return err
+		}
+	case "fish":
+
+		fileToEdit, err = dbncfg.SanitizePath("&/fish/config.fish")
+		if err != nil {
+			return err
+		}
+	}
+
+	if write {
+
+		f, err := os.OpenFile(fileToEdit, os.O_CREATE|os.O_APPEND, 0644)
+		if err != nil {
+			return err
+		}
+		_, err = f.WriteString("\n" + stringToAdd)
+
+		if err != nil {
+			return fmt.Errorf("Error writing to the shell config file %w", err)
+		}
+
+		pet.YellowLn("Succefully added pet to shell startup")
+	} else {
+		fmt.Printf("To make your terminal pet appear on startup add `%s` to %s\n", stringToAdd, fileToEdit)
+	}
+
 	return nil
 }

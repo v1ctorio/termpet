@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"runtime/debug"
 	"slices"
@@ -88,7 +89,8 @@ func noCommand(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	pet.Sayln("Click p to pet me!")
+	pet.Sayln(commands.NormalGreets[rand.Intn(len(commands.NormalGreets))], name)
+	fmt.Println("p: pet; f: feed")
 
 	for keepListening {
 
@@ -100,7 +102,19 @@ func noCommand(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		if input == "p" {
+			err := pet.UpdateLatestInteractionTime()
+			err = pet.UpdateHunger()
+			if err != nil {
+				return err
+			}
 			pet.YellowLn("You pet %s\n", name)
+		}
+		if input == "f" {
+			keepListening = false
+			err = commands.FeedCommand.Run(context.Background(), []string{})
+			if err != nil {
+				return err
+			}
 		}
 
 		if !slices.Contains(verbs, string(input)) {
