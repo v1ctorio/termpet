@@ -18,6 +18,7 @@ const (
 	PetLatestInteractionTimestamp petValidKey = "latestinteractiontime"
 	PetHunger                     petValidKey = "hunger"
 	PetSickness                   petValidKey = "sickness"
+	SlackWebhook                  petValidKey = "slackwebhooj"
 )
 
 // I know this is hardcoded and kinda trashy but idk how to make it better without dependencies
@@ -30,6 +31,7 @@ type PetData struct {
 	LatestInteractionTimestamp string
 	Hunger                     int
 	Sickness                   string
+	SlackWebhook               string
 }
 
 func (p PetData) Save() error {
@@ -42,6 +44,7 @@ func (p PetData) Save() error {
 	err = dbncfg.SetV(db, PetHunger.String(), p.Hunger)
 	err = dbncfg.SetV(db, PetLatestInteractionTimestamp.String(), p.LatestInteractionTimestamp)
 	err = dbncfg.SetV(db, PetSickness.String(), p.Sickness)
+	err = dbncfg.SetV(db, SlackWebhook.String(), p.SlackWebhook)
 	db.Close()
 	return err
 }
@@ -70,11 +73,17 @@ func GetPet() (pd PetData, err error) {
 	if err != nil {
 		return
 	}
+
+	sw, err := GetKNoUpdate(SlackWebhook)
+	if err != nil {
+		return
+	}
 	return PetData{
 		Name:                       pn,
 		LatestInteractionTimestamp: lit,
 		Hunger:                     h,
 		Sickness:                   s,
+		SlackWebhook:               sw,
 	}, nil
 
 }
@@ -92,6 +101,31 @@ const STARVATION = 24 * 2
 var config *dbncfg.TermpetConfig = &dbncfg.Config
 
 var SayContent string = ""
+
+func ParseWithC(text string, v ...any) (string, error) {
+	if strings.Contains(text, "%t") {
+		v = []any{}
+		text = strings.ReplaceAll(text, "%t", "")
+	}
+	formatted := fmt.Sprintf(text, v...)
+
+	cmdParts := strings.Fields(strings.Replace(config.CommandParser, "{}", formatted, 1))
+	if len(cmdParts) == 0 {
+		return "", fmt.Errorf("No command to execute")
+	}
+
+	executable, err := exec.LookPath(cmdParts[0])
+	if err != nil || executable == "" {
+		return "", fmt.Errorf("No executable %s found. Check if it's in path", cmdParts[0])
+	}
+	out, err := exec.Command(executable, cmdParts[1:]...).CombinedOutput()
+
+	if err != nil {
+		return "", fmt.Errorf("Error executing the parser command %w", err)
+	}
+
+	return string(out), nil
+}
 
 func Sayln(text string, v ...any) error {
 	if strings.Contains(text, "%t") {

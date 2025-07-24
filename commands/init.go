@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"runtime"
@@ -47,6 +48,17 @@ var InitCommand = &cli.Command{
 				},
 			},
 			Action: initStartup,
+		},
+		{
+			Name:  "slack",
+			Usage: "Add a slack webhook for the dispatch command",
+			Arguments: []cli.Argument{
+				&cli.StringArg{
+					Name:      "webhook",
+					UsageText: "Slack webhook url to use",
+				},
+			},
+			Action: initSlack,
 		},
 	},
 }
@@ -181,4 +193,19 @@ func initStartup(ctx context.Context, cmd *cli.Command) (err error) {
 	}
 
 	return nil
+}
+
+func initSlack(ctx context.Context, cmd *cli.Command) (err error) {
+	webhook := strings.TrimSpace(cmd.StringArg("webhook"))
+	if webhook == "" {
+		return fmt.Errorf("Provide a slack webhook as an argument!")
+	}
+	if _, err := url.ParseRequestURI(webhook); err != nil {
+
+		return fmt.Errorf("Invalid url provided %w", err)
+	}
+
+	err = pet.SetK(pet.SlackWebhook, webhook)
+	pet.YellowLn("Webhook url succesfully saved")
+	return err
 }
