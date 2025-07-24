@@ -1,6 +1,6 @@
 # TermPet
 
-A terminal pet that can be used to keep you company while you work in the terminal.
+A terminal pet made to accompany you on your text adventures.
 
 ```
 NAME:
@@ -24,7 +24,7 @@ GLOBAL OPTIONS:
    --help, -h  show help
 ```
 
-Termpet ideas is for there to be someone who is always there to help you with small little things from the terminal.
+Termpet is someone who is always there to help you with small little things from the terminal.
 
 From flipping a coin or playing a rock paper scissors to dispatching a message to Slack (more services to come).
 
