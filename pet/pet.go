@@ -39,8 +39,17 @@ func (p PetData) save() error {
 }
 func GetPet() (PetData, error) {
 	pn, err := GetKNoUpdate(PetName)
+	if err != nil {
+		return PetData{}, err
+	}
 	hunger, err := GetKNoUpdate(PetHunger)
+	if err != nil {
+		return PetData{}, err
+	}
 	h, err := strconv.Atoi(hunger)
+	if err != nil {
+		return PetData{}, err
+	}
 	lit, err := GetKNoUpdate(PetLatestInteractionTimestamp)
 	if err != nil {
 		return PetData{}, err

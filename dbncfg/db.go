@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
@@ -55,7 +56,7 @@ func SanitizePath(path string) (string, error) {
 }
 
 func GetV(db *bolt.DB, key string) (string, error) {
-
+	time.Sleep(1000)
 	if PetName == "" {
 		return "", fmt.Errorf("Error trying to read database. No pet name provided")
 	}
@@ -81,6 +82,8 @@ func GetV(db *bolt.DB, key string) (string, error) {
 }
 
 func SetV(db *bolt.DB, key string, value string) error {
+	time.Sleep(1000)
+
 	if key == "" {
 		return fmt.Errorf("No key provided for errorf")
 	}
@@ -92,6 +95,5 @@ func SetV(db *bolt.DB, key string, value string) error {
 		}
 		return bucket.Put(B(key), B(value))
 	})
-	db.Close()
 	return err
 }
