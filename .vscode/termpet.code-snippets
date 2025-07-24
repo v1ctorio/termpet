@@ -19,6 +19,8 @@
 		"scope": "go",
 		"prefix": "cmd",
 		"body": [
+			"package commands",
+			"",
 			"var ${1:${TM_FILENAME_BASE/(.*)/${1:/capitalize}/}}Command = &cli.Command{",
 			"Name: \"${2:${TM_FILENAME_BASE/(.*)/${1:/downcase}/}}\",",
 			"Usage: \"$3\",",
