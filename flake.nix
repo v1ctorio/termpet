@@ -24,7 +24,7 @@
         rec {
           termpet = pkgs.buildGoModule {
             pname = "termpet";
-            version = "0.0.2";
+            version = "0.0.2-a";
             src = ./.;
             rev = "v0.0.2-a";
             
